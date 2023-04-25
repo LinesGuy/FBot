@@ -7,9 +7,7 @@ class Ping(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        ping = (self.bot.latency * 100000) // 100
-        embed = self.bot.embed(ctx.author, f"FBots Ping: `{ping}ms`")
-        await ctx.send(embed=embed)
+        await ctx.send(f"Pong!\n`{int(self.bot.latency * 1000)}ms`")
 
 async def setup(bot):
     await bot.add_cog(Ping(bot))

@@ -15,96 +15,29 @@ class Bot(commands.AutoShardedBot):
 
         super().__init__(command_prefix="fbot ", intents=intents, chunk_guilds_at_startup=False)
 
-        self.startup()
         # TODO database shit
         # TODO trigger/response shit
         # TODO replace default help command with fbot help
+        # TODO load cogs
+        #for cog in fn.getcogs():
+        #    if cog not in []:
+        #        print(f"\nLoading {cog}...", end="")
+        #        try: await self.reload_extension("cogs." + cog[:-3])
+        #        except: await self.load_extension("cogs." + cog[:-3])
+        #        finally: print("Done", end="")
+        #print("\n\n > Loaded cogs\n")
+    async def setup_hook(self):
+        logger = logging.getLogger("discord")
+        logger.info("setup_hook() called")
+        for extension in ["hello", "ping", "extension_handler", "error_handler"]:
+            logger.info(f"Loading extension: {extension}")
+            await self.load_extension(f"extensions.{extension}")
+        logger.info(f"Done loading extensions")
 
-        for cog in fn.getcogs():
-            if cog not in []:
-                print(f"\nLoading {cog}...", end="")
-                try: await self.reload_extension("cogs." + cog[:-3])
-                except: await self.load_extension("cogs." + cog[:-3])
-                finally: print("Done", end="")
-        print("\n\n > Loaded cogs\n")
-
-        self.premium = await self.get_premium()
-        self.cache = cache.Cache(self.settings.devs, self.premium)
-
-        for command in cm.commands:
-            self.cache.cooldowns.add(command, tuple(cm.commands[command][3:5]))
-        for command in cm.devcmds:
-            self.cache.cooldowns.add(command, (0, 0))
-        print(" > Finished setting up cooldowns")
-
-        await self.change_presence(status=discord.Status.online,
-                                activity=discord.Game(name="'FBot help'"))
-
-        self.prepped = True
-
-    async def cleanup(self):
-        c = await self.db.connection(autoclose=False)
-        guild_ids = dict()
-        for guild in bot.guilds:
-            guild_ids[guild.id] = guild
-
-        count = [0, 0]
-        for guild in bot.guilds:
-            await c.execute("SELECT guild_id FROM guilds WHERE guild_id=%s;", (guild.id,))
-            if not await c.fetchone():
-                await self.db.addguild(guild.id)
-                count[0] += 1
-            # doesnt work for some god foresaken reason
-            await c.execute("SELECT guild_id FROM counting WHERE guild_id=%s;", (guild.id,))
-            result = await c.fetchone()
-            if not result:
-                await self.db.addcounting(guild.id)
-                count[1] += 1
-        print("Added", count[0], "guilds to 'guilds'")
-        print("Added", count[1], "missing guilds to 'counting'")
-
-        count = [0, 0]
-        await c.execute("SELECT guild_id FROM guilds;")
-        for row in await c.fetchall():
-            guild_id = row[0]
-            if not (guild_id in guild_ids):
-                await self.db.removeguild(guild_id)
-                count[0] += 1
-            else:
-                channel_ids = [channel.id for channel in guild_ids[guild_id].channels]
-                await c.execute("SELECT channel_id FROM channels WHERE guild_id=%s;", (guild_id,))
-                for row in await c.fetchall():
-                    channel_id = row[0]
-                    if not (channel_id in channel_ids):
-                        await c.execute("DELETE FROM channels WHERE channel_id=%s;", (channel_id,))
-                        count[1] += 1
-        print("Removed", count[0], "guilds from 'guilds'")
-        print("Removed", count[1], "channels from 'channels'")
-
-        count = 0
-        await c.execute("SELECT guild_id FROM channels;")
-        for row in await c.fetchall():
-            guild_id = row[0]
-            if not (guild_id in guild_ids):
-                await c.execute("DELETE FROM channels WHERE guild_id=%s;", (guild_id,))
-                count += 1
-        print("Removed", count, "guild channels from 'channels'")
-
-        count = 0
-        await c.execute("SELECT guild_id FROM counting;")
-        for row in await c.fetchall():
-            guild_id = row[0]
-            if not (guild_id in guild_ids):
-                await c.execute("DELETE FROM counting WHERE guild_id=%s;", (guild_id,))
-                count += 1
-        print("Removed", count, "guilds from 'counting'\n")
-
-        await c.close()
-
-        self.cleaning = False
-        print(f" > Bot is ready")
-        self.dispatch("bot_ready")
-        self.bot_ready = True
+    async def on_ready(self):
+        logging.getLogger("discord").info("on_ready() called")
+        await self.change_presence(status=discord.Status.idle, activity=discord.Game(name="zzz"))
+        await self.get_channel(1100477664617312386).send("Bot is ready!")
 
     def embed(self, user, title, *desc, url=""):
         colour = self.get_colour(user.id)
@@ -152,28 +85,28 @@ class Bot(commands.AutoShardedBot):
         self.stats.commands_processed += 1
         return True
 
-
 def main():
-    # Hai :3
-    print("Hello, world!")
-
     # Set up logging
     logger = logging.getLogger("discord")
-    logger.setLevel(logging.DEBUG)
-    logging.getLogger("discord.http").setLevel(logging.INFO)
+    logger.setLevel(logging.INFO)
     if not os.path.exists("Logs"):
         os.makedirs("Logs")
     fileHandler = logging.FileHandler(os.path.join("Logs", datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")))
     formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', '%Y-%m-%d %H:%M:%S', style='{')
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(formatter)
+    logger.addHandler(consoleHandler)
+    logger.propagate = False
+    logger.info("Set up logging")
 
     # Load settings
     settings = json.load(open("settings.json", "r"))
 
     # It's showtime, baby!
     bot = Bot()
-    bot.run(settings["tokens"]["main"], log_level=logging.INFO)
+    bot.run(settings["tokens"]["lines"], log_handler=None)
 
 if __name__ == "__main__":
     main()
