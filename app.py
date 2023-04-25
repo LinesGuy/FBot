@@ -1,68 +1,25 @@
-import nest_asyncio
-nest_asyncio.apply()
-
 from discord.ext import commands
 import discord
+import logging
+import datetime
 import json
-
-from lib.commands import cmds
-from lib.triggers import tr
-import lib.functions as fn
-import lib.commands as cm
-import lib.database as db
-import lib.cache as cache
+import os
 
 class Bot(commands.AutoShardedBot):
-
-    premium = list()
-
     def __init__(self):
-
-        print(" > Preparing the bot")
-
-        with open("settings.json", "r") as file:
-            self.settings = fn.Classify(json.load(file))
-            self.devs = self.settings.devs
+        logging.info("Session started!")
 
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
 
-        super().__init__(command_prefix=fn.getprefix, intents=intents,
-                         shard_count=self.settings.shards)
+        super().__init__(command_prefix="fbot ", intents=intents, chunk_guilds_at_startup=False)
 
-        self.shards_connected = 0
-        self.shards_ready = list()
+        self.startup()
+        # TODO database shit
+        # TODO trigger/response shit
+        # TODO replace default help command with fbot help
 
-        self.prepped = False
-        self.bot_ready = False
-        self.cleaning = False
-
-    def ready(self):
-        return self.bot_ready
-
-    def are_shards_ready(self):
-        if len(self.shards_ready) == self.shard_count and not self.cleaning:
-            return True
-        return False
-
-    async def prep(self):
-
-        self.ftime = fn.ftime()
-        self.ftime.set()
-        print(f"\n > All shards ready, finishing preparations")
-        print(f" > Session started at {self.ftime.start}\n")
-
-        # fn.VotingHandler(self)
-        self.add_check(self.predicate)
-
-        self.db = await db.connect(self.settings)
-        print(" > Loaded the database")
-
-        for csv in [tr, cmds]:
-            csv.load()
-
-        self.remove_command("help")
         for cog in fn.getcogs():
             if cog not in []:
                 print(f"\nLoading {cog}...", end="")
@@ -149,67 +106,6 @@ class Bot(commands.AutoShardedBot):
         self.dispatch("bot_ready")
         self.bot_ready = True
 
-    async def on_shard_connect(self, shard_id):
-        self.shards_connected += 1
-        print(f" > Shard {shard_id} CONNECTED, {self.shards_connected}/{self.shard_count} connected")
-
-    async def on_shard_ready(self, shard_id):
-        if not shard_id in self.shards_ready:
-            self.shards_ready.append(shard_id)
-        print(f" > Shard {shard_id} READY, {len(self.shards_ready)}/{self.shard_count} ready")
-
-        if self.are_shards_ready():
-            if not self.prepped:
-                await self.prep()
-            if not self.cleaning:
-                self.cleaning = True
-                print(" > Cleaning up the database")
-                await self.cleanup()
-
-    async def on_shard_resumed(self, shard_id):
-        self.shards_connected += 1
-        if not shard_id in self.shards_ready:
-            self.shards_ready.append(shard_id)
-        print(f" > Shard {shard_id} RESUMED, {len(self.shards_ready)}/{self.shard_count} ready")
-
-        if self.are_shards_ready() and not self.cleaning and self.prepped:
-            await self.cleanup()
-
-    async def on_shard_disconnect(self, shard_id):
-        self.shards_connected -= 1
-        if shard_id in self.shards_ready:
-            self.shards_ready.remove(shard_id)
-        self.bot_ready = False
-        print(f" > Shard {shard_id} DISCONNECTED, {len(self.shards_ready)}/{self.shard_count} online")
-
-    async def get_premium(self):
-
-        guild = self.get_guild(self.settings.server)
-        role = guild.get_role(self.settings.roles.premium)
-
-        premium = set()
-        for member in role.members:
-            premium.add(member.id)
-
-        return premium
-
-    #async def on_member_update(self, before, after):
-
-    #    if before.roles == after.roles:
-    #        return
-
-    #    for role in after.roles:
-    #        if role.id == self.settings.roles.premium:
-    #            self.premium.add(after.id)
-    #            return
-
-    #    self.premium.remove(after.id)
-
-    def get_colour(self, user_id):
-        if user_id in self.premium:
-            pass
-        return 0xf42f42
-
     def embed(self, user, title, *desc, url=""):
         colour = self.get_colour(user.id)
         desc = "\n".join(desc)
@@ -256,5 +152,28 @@ class Bot(commands.AutoShardedBot):
         self.stats.commands_processed += 1
         return True
 
-bot = Bot()
-bot.run(bot.settings.tokens.bot, log_level=50)
+
+def main():
+    # Hai :3
+    print("Hello, world!")
+
+    # Set up logging
+    logger = logging.getLogger("discord")
+    logger.setLevel(logging.DEBUG)
+    logging.getLogger("discord.http").setLevel(logging.INFO)
+    if not os.path.exists("Logs"):
+        os.makedirs("Logs")
+    fileHandler = logging.FileHandler(os.path.join("Logs", datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")))
+    formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', '%Y-%m-%d %H:%M:%S', style='{')
+    fileHandler.setFormatter(formatter)
+    logger.addHandler(fileHandler)
+
+    # Load settings
+    settings = json.load(open("settings.json", "r"))
+
+    # It's showtime, baby!
+    bot = Bot()
+    bot.run(settings["tokens"]["main"], log_level=logging.INFO)
+
+if __name__ == "__main__":
+    main()

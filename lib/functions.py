@@ -17,6 +17,7 @@ def formatperm(perm):
     return " ".join(text)
 
 async def getprefix(bot, message):
+    # Currently unused 2023-04-25, prefix is just "fbot "
     if not bot.ready():
         return "fbot"
     prefix = "fbot"
