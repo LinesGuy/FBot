@@ -8,6 +8,8 @@ class Errorhandler(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         match type(error):
+            case commands.CommandNotFound:
+                return
             case commands.NotOwner:
                 await ctx.reply("Only bot owners can run this command!")
 
