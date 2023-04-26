@@ -18,14 +18,18 @@ class Bot(commands.AutoShardedBot):
     async def setup_hook(self):
         logger = logging.getLogger("discord")
         logger.info("setup_hook() called")
-        for extension in ["hello", "ping", "extension_handler", "error_handler"]:
+
+        self.remove_command("help")
+
+        for extension in ["hello", "ping", "extension_handler", "error_handler", "trigger_response", "help", "eval", "set_presence"]:
             logger.info(f"Loading extension: {extension}")
             await self.load_extension(f"extensions.{extension}")
+
         logger.info(f"Done loading extensions")
 
     async def on_ready(self):
         logging.getLogger("discord").info("on_ready() called")
-        await self.change_presence(status=discord.Status.idle, activity=discord.Game(name="zzz"))
+        await self.change_presence(status=discord.Status.onilne, activity=discord.Game(name="soontm?"))
         await self.get_channel(1100477664617312386).send("Bot is ready!")
 
 def main():
@@ -47,10 +51,7 @@ def main():
     logger.propagate = False # Supresses default log format
     logger.info("Set up logging")
 
-    # Load settings
     settings = json.load(open("settings.json", "r"))
-
-    # It's showtime, baby!
     bot = Bot()
     bot.run(settings["tokens"]["lines"], log_handler=None)
 
