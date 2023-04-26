@@ -1,9 +1,12 @@
+from statistics import multimode
 from discord.ext import commands
 import discord
 import logging
 import datetime
 import json
 import os
+import mysql.connector
+
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
@@ -13,7 +16,9 @@ class Bot(commands.AutoShardedBot):
         intents.members = True
         intents.message_content = True
 
-        super().__init__(command_prefix="fbot ", intents=intents, chunk_guilds_at_startup=False)
+        super().__init__(
+            command_prefix="fbot ", intents=intents, chunk_guilds_at_startup=False
+        )
 
     async def setup_hook(self):
         logger = logging.getLogger("discord")
@@ -21,7 +26,17 @@ class Bot(commands.AutoShardedBot):
 
         self.remove_command("help")
 
-        for extension in ["hello", "ping", "extension_handler", "error_handler", "trigger_response", "help", "eval", "set_presence"]:
+        for extension in [
+            "hello",
+            "ping",
+            "extension_handler",
+            "error_handler",
+            "trigger_response",
+            "help",
+            "eval",
+            "set_presence",
+            "ppsize",
+        ]:
             logger.info(f"Loading extension: {extension}")
             await self.load_extension(f"extensions.{extension}")
 
@@ -34,6 +49,7 @@ class Bot(commands.AutoShardedBot):
         )
         await self.get_channel(1100477664617312386).send("Bot is ready!")
 
+
 def main():
     # Set up logging
     logger = logging.getLogger("discord")
@@ -41,8 +57,12 @@ def main():
     if not os.path.exists("Logs"):
         os.makedirs("Logs")
     # Write log to file
-    fileHandler = logging.FileHandler(os.path.join("Logs", datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")))
-    formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', '%Y-%m-%d %H:%M:%S', style='{')
+    fileHandler = logging.FileHandler(
+        os.path.join("Logs", datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log"))
+    )
+    formatter = logging.Formatter(
+        "[{asctime}] [{levelname:<8}] {name}: {message}", "%Y-%m-%d %H:%M:%S", style="{"
+    )
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
     # Write log to console
@@ -50,7 +70,7 @@ def main():
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
 
-    logger.propagate = False # Supresses default log format
+    logger.propagate = False  # Supresses default log format
     logger.info("Set up logging")
 
     settings = json.load(open("settings.json", "r"))
@@ -63,6 +83,7 @@ def main():
     )
 
     bot.run(settings["tokens"]["lines"], log_handler=None)
+
 
 if __name__ == "__main__":
     main()
