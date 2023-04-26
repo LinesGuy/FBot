@@ -29,7 +29,9 @@ class Bot(commands.AutoShardedBot):
 
     async def on_ready(self):
         logging.getLogger("discord").info("on_ready() called")
-        await self.change_presence(status=discord.Status.onilne, activity=discord.Game(name="soontm?"))
+        await self.change_presence(
+            status=discord.Status.online, activity=discord.Game(name="soontm?")
+        )
         await self.get_channel(1100477664617312386).send("Bot is ready!")
 
 def main():
