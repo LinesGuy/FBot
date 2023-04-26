@@ -53,6 +53,13 @@ def main():
 
     settings = json.load(open("settings.json", "r"))
     bot = Bot()
+    bot.db = mysql.connector.connect(
+        host=settings["database"]["host"],
+        user=settings["database"]["user"],
+        password=settings["database"]["password"],
+        database=settings["database"]["database_name"]
+    )
+
     bot.run(settings["tokens"]["lines"], log_handler=None)
 
 if __name__ == "__main__":
