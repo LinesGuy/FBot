@@ -130,7 +130,6 @@ class TriggerResponse(commands.Cog):
                 continue
             break
         else:
-            await message.channel.send("no triggers")
             return  # No response
         response = entry.response.replace("{username}", message.author.display_name)
         response = response.replace("{answer}", random.choice(answers))
