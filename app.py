@@ -79,7 +79,8 @@ def main():
         host=settings["database"]["host"],
         user=settings["database"]["user"],
         password=settings["database"]["password"],
-        database=settings["database"]["database_name"]
+        database=settings["database"]["database_name"],
+        autocommit=True
     )
 
     bot.run(settings["tokens"]["lines"], log_handler=None)
