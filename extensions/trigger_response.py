@@ -99,7 +99,6 @@ class TriggerResponse(commands.Cog):
         for entry in entries:
             msg = message.content.lower() if entry.case == ANYCASE else message.content
             for trigger in entry.triggers:
-                print(trigger, entry.type == WHOLE and msg == trigger)
                 # All these trigger types are all trivially checked
                 if (
                     (entry.type == WHOLE and msg == trigger)
