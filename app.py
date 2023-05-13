@@ -36,7 +36,6 @@ class Bot(commands.AutoShardedBot):
             "eval",
             "set_presence",
             "ppsize",
-            "counting",
         ]:
             logger.info(f"Loading extension: {extension}")
             await self.load_extension(f"extensions.{extension}")
