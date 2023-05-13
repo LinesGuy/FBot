@@ -98,15 +98,15 @@ class TriggerResponse(commands.Cog):
         # TODO if response length greater than 2000, trim to first 1997 chars and add ...
         for entry in entries:
             msg = message.content.lower() if entry.case == ANYCASE else message.content
-            for trigger in entry.triggers:
+            for alias in entry.triggers:
                 # All these trigger types are all trivially checked
                 if (
-                    (entry.type == WHOLE and msg == trigger)
-                    or (entry.type == START and msg.startswith(trigger))
-                    or (entry.type == END and msg.endswith(trigger))
-                    or (entry.type == ANYWHERE and trigger in msg)
-                    or (entry.type == LETTERS and msg.replace(trigger, "") == "")
-                    or (entry.type == REPLACE and trigger in msg)
+                    (entry.type == WHOLE and msg == alias)
+                    or (entry.type == START and msg.startswith(alias))
+                    or (entry.type == END and msg.endswith(alias))
+                    or (entry.type == ANYWHERE and alias in msg)
+                    or (entry.type == LETTERS and msg.replace(alias, "") == "")
+                    or (entry.type == REPLACE and alias in msg)
                 ):
                     break
                 # The REPLACE type requires a bit more code:
@@ -127,15 +127,16 @@ class TriggerResponse(commands.Cog):
                         continue
                     break
             else:
-                continue
-            break
-        else:
             return  # No response
-        response = entry.response.replace("{username}", message.author.display_name)
+        if entry.type == REPLACE:
+            response = message.content.replace(alias, entry.response)
+        else:
+            response = entry.response
+        response = response.replace("{username}", message.author.display_name)
         response = response.replace("{answer}", random.choice(answers))
         response = response.replace("{funny}", random.choice(funnies))
         response = response.replace("{message}", message.content)
-        response = response.replace("{after}", message.content[len(trigger) :])
+        response = response.replace("{after}", message.content[len(alias) :])
         await message.channel.send(response)
 
     @commands.command()
