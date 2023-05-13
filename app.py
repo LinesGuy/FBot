@@ -19,13 +19,14 @@ class Bot(commands.AutoShardedBot):
         super().__init__(
             command_prefix="fbot ", intents=intents, chunk_guilds_at_startup=False
         )
+        self.connect_db()
 
     async def setup_hook(self):
         logger = logging.getLogger("discord")
         logger.info("setup_hook() called")
 
         self.remove_command("help")
-
+        # TODO load entire folder
         for extension in [
             "hello",
             "ping",
@@ -36,11 +37,22 @@ class Bot(commands.AutoShardedBot):
             "eval",
             "set_presence",
             "ppsize",
+            "counting",
         ]:
             logger.info(f"Loading extension: {extension}")
             await self.load_extension(f"extensions.{extension}")
 
         logger.info(f"Done loading extensions")
+    async def connect_db(self):
+        self.db = mysql.connector.connect(
+        host=self.settings["database"]["host"],
+        user=self.settings["database"]["user"],
+        password=self.settings["database"]["password"],
+        database=self.settings["database"]["database_name"],
+        autocommit=True
+    )
+    async def on_shard_resumed(self, shard_id):
+        self.connect_db()
 
     async def on_ready(self):
         logging.getLogger("discord").info("on_ready() called")
@@ -48,7 +60,6 @@ class Bot(commands.AutoShardedBot):
             status=discord.Status.online, activity=discord.Game(name="soontm?")
         )
         await self.get_channel(1100477664617312386).send("Bot is ready!")
-
 
 def main():
     # Set up logging
@@ -73,17 +84,9 @@ def main():
     logger.propagate = False  # Supresses default log format
     logger.info("Set up logging")
 
-    settings = json.load(open("settings.json", "r"))
     bot = Bot()
-    bot.db = mysql.connector.connect(
-        host=settings["database"]["host"],
-        user=settings["database"]["user"],
-        password=settings["database"]["password"],
-        database=settings["database"]["database_name"],
-        autocommit=True
-    )
-
-    bot.run(settings["tokens"]["lines"], log_handler=None)
+    bot.settings = json.load(open("settings.json", "r"))
+    bot.run(bot.settings["tokens"]["lines"], log_handler=None)
 
 
 if __name__ == "__main__":
