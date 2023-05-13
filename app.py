@@ -19,7 +19,6 @@ class Bot(commands.AutoShardedBot):
         super().__init__(
             command_prefix="fbot ", intents=intents, chunk_guilds_at_startup=False
         )
-        self.connect_db()
 
     async def setup_hook(self):
         logger = logging.getLogger("discord")
@@ -43,6 +42,9 @@ class Bot(commands.AutoShardedBot):
             await self.load_extension(f"extensions.{extension}")
 
         logger.info(f"Done loading extensions")
+
+        await self.connect_db()
+
     async def connect_db(self):
         self.db = mysql.connector.connect(
         host=self.settings["database"]["host"],
@@ -52,7 +54,7 @@ class Bot(commands.AutoShardedBot):
         autocommit=True
     )
     async def on_shard_resumed(self, shard_id):
-        self.connect_db()
+        await self.connect_db()
 
     async def on_ready(self):
         logging.getLogger("discord").info("on_ready() called")
