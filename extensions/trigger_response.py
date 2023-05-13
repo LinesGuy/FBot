@@ -111,22 +111,20 @@ class TriggerResponse(commands.Cog):
                     break
                 # The REPEAT type requires a bit more code:
                 if entry.type == REPEAT:
-                    for alias in entry.triggers:
-                        start, end = alias.split("~")
-                        letter = start[-1]
-                        if (
-                            msg.startswith(start)
-                            and msg.endswith(end)
-                            and (
-                                all([c == letter for c in msg[len(start) : -len(end)]])
-                            )
-                        ):
-                            trigger = trigger
-                            break
-                    else:
-                        continue
-                    break
+                    start, end = alias.split("~")
+                    letter = start[-1]
+                    if (
+                        msg.startswith(start)
+                        and msg.endswith(end)
+                        and (
+                            all([c == letter for c in msg[len(start) : -len(end)]])
+                        )
+                    ):
+                        break
             else:
+                continue
+            break
+        else:
             return  # No response
         if entry.type == REPLACE:
             response = message.content.replace(alias, entry.response)
