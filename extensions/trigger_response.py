@@ -109,7 +109,7 @@ class TriggerResponse(commands.Cog):
                     or (entry.type == REPLACE and alias in msg)
                 ):
                     break
-                # The REPLACE type requires a bit more code:
+                # The REPEAT type requires a bit more code:
                 if entry.type == REPEAT:
                     for alias in entry.triggers:
                         start, end = alias.split("~")
