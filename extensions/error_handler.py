@@ -12,9 +12,7 @@ class Errorhandler(commands.Cog):
     async def on_command_error(self, ctx, error):
         match type(error):
             case commands.MissingRequiredArgument:
-                await ctx.reply(
-                    "This command is missing a required argument, also if you're reading this then Lines forgot to add a proper error message here"
-                )
+                await ctx.reply(f"Command is missing an argument! Command usage:\n`{ctx.command.usage}`")
             case commands.CommandNotFound:
                 return
             case commands.NotOwner:
