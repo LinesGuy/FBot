@@ -4,6 +4,8 @@ import discord
 class SetPresence(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        
+    @commands.is_owner()
 
     @commands.command(help="Sets the current presence of the bot", brief="Sets bot presence", usage="fbot presence <awesome presence>")
     async def presence(self, ctx, *, content):
