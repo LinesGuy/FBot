@@ -87,6 +87,7 @@ def main():
 
     bot = Bot()
     bot.settings = json.load(open("settings.json", "r"))
+    bot.owner_ids = set(bot.settings["owner_ids"])
     bot.run(bot.settings["tokens"]["lines"], log_handler=None)
 
 
